@@ -7,7 +7,10 @@ import org.bson.Document;
  */
 public class Meta {
 
-    private static final String META = "$meta";
+    /**
+     * @morphia.internal
+     */
+    public static final String META = "$meta";
     private final String metaDataKeyword;
     private final String field;
 

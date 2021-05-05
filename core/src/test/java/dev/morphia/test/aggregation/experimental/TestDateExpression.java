@@ -1,11 +1,11 @@
 package dev.morphia.test.aggregation.experimental;
 
+import dev.morphia.MorphiaCursor;
 import dev.morphia.aggregation.experimental.Aggregation;
 import dev.morphia.aggregation.experimental.stages.AddFields;
 import dev.morphia.aggregation.experimental.stages.Sort;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
-import dev.morphia.query.MorphiaCursor;
 import dev.morphia.test.aggregation.experimental.expressions.ExpressionsTestBase;
 import dev.morphia.test.aggregation.experimental.model.Sales;
 import dev.morphia.test.aggregation.experimental.model.StringDates;

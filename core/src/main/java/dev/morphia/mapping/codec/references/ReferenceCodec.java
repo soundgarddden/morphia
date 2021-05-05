@@ -40,6 +40,7 @@ import org.bson.codecs.configuration.CodecConfigurationException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -310,9 +311,12 @@ public class ReferenceCodec extends BaseReferenceCodec<Object> implements Proper
         } else {
             reference = readSingle(value);
         }
-        reference.ignoreMissing(annotation.ignoreMissing());
-
-        return !annotation.lazy() ? reference.get() : createProxy(reference);
+        if (reference != null) {
+            reference.ignoreMissing(annotation.ignoreMissing());
+            return !annotation.lazy() ? reference.get() : createProxy(reference);
+        } else {
+            return null;
+        }
     }
 
     private List<?> mapToEntitiesIfNecessary(List<?> value) {
@@ -355,7 +359,16 @@ public class ReferenceCodec extends BaseReferenceCodec<Object> implements Proper
                : new SetReference<>(new LinkedHashSet<>(mapped));
     }
 
+    @Nullable
     MorphiaReference<?> readSingle(Object value) {
+        if (value instanceof Collection) {
+            Iterator iterator = ((Collection) value).iterator();
+            if (iterator.hasNext()) {
+                value = iterator.next();
+            } else {
+                return null;
+            }
+        }
         return new SingleReference<>(getDatastore(), getEntityModelForField(), value);
     }
 }

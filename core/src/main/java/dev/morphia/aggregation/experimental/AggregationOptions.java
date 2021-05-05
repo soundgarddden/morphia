@@ -11,6 +11,7 @@ import com.mongodb.lang.Nullable;
 import dev.morphia.internal.ReadConfigurable;
 import dev.morphia.internal.SessionConfigurable;
 import dev.morphia.internal.WriteConfigurable;
+import dev.morphia.query.FindOptions;
 import org.bson.Document;
 
 import java.util.List;
@@ -22,9 +23,9 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unused")
 public class AggregationOptions implements SessionConfigurable<AggregationOptions>, ReadConfigurable<AggregationOptions>,
                                                WriteConfigurable<AggregationOptions> {
-    private boolean allowDiskUse;
+    private Boolean allowDiskUse;
     private Integer batchSize;
-    private boolean bypassDocumentValidation;
+    private Boolean bypassDocumentValidation;
     private Collation collation;
     private Long maxTimeMS;
     private ClientSession clientSession;
@@ -32,6 +33,25 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     private ReadConcern readConcern;
     private WriteConcern writeConcern;
     private Document hint;
+
+    public AggregationOptions() {
+    }
+
+    /**
+     * @param options the options to copy
+     * @morphia.internal
+     * @since 2.2
+     */
+    public AggregationOptions(FindOptions options) {
+        allowDiskUse = options.getAllowDiskUse();
+        batchSize = options.getBatchSize();
+        collation = options.getCollation();
+        maxTimeMS = options.getMaxTime(TimeUnit.MILLISECONDS);
+        clientSession = options.clientSession();
+        readConcern = options.getReadConcern();
+        readPreference = options.getReadPreference();
+        hint = options.getHint();
+    }
 
     /**
      * @return the configuration value

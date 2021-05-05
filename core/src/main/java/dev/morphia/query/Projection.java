@@ -43,18 +43,14 @@ public class Projection {
         return options;
     }
 
-    private void validateProjections() {
-        if ((includes != null || excludes != null) && (slice != null || meta != null)) {
-            throw new ValidationException(Sofia.mixedModeProjections());
-        }
-        if (slice != null && meta != null) {
-            throw new ValidationException(Sofia.mixedModeProjections());
-        }
-        if (includes != null && excludes != null) {
-            if (excludes.size() > 1 || !"_id".equals(excludes.get(0))) {
-                throw new ValidationException(Sofia.mixedProjections());
-            }
-        }
+    /**
+     * @return the list of excludes.  may be null
+     * @morphia.internal
+     * @since 2.2
+     */
+    @Nullable
+    public List<String> excludes() {
+        return excludes;
     }
 
     /**
@@ -71,6 +67,16 @@ public class Projection {
         includes.addAll(List.of(fields));
         validateProjections();
         return options;
+    }
+
+    /**
+     * @return the list of includes.  may be null
+     * @morphia.internal
+     * @since 2.2
+     */
+    @Nullable
+    public List<String> includes() {
+        return includes;
     }
 
     /**
@@ -103,6 +109,36 @@ public class Projection {
         }
 
         return null;
+    }
+
+    /**
+     * Adds an sliced array field to a projection.
+     *
+     * @param field the field to project
+     * @param slice the options for projecting an array field
+     * @return this
+     * @mongodb.driver.manual /reference/operator/projection/slice/ $slice
+     * @see <a href="https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/">Project Fields to Return from Query</a>
+     */
+    public FindOptions project(String field, ArraySlice slice) {
+        this.arrayField = field;
+        this.slice = slice;
+        validateProjections();
+        return options;
+    }
+
+    /**
+     * Adds a metadata field to a projection.
+     *
+     * @param meta the metadata option for projecting
+     * @return this
+     * @mongodb.driver.manual reference/operator/projection/meta/ $meta
+     * @see <a href="https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/">Project Fields to Return from Query</a>
+     */
+    public FindOptions project(Meta meta) {
+        this.meta = meta;
+        validateProjections();
+        return options;
     }
 
     private void iterate(Mapper mapper, Document projection, Class<?> clazz, @Nullable List<String> fields,
@@ -149,37 +185,21 @@ public class Projection {
         return new Document(fieldName, slice.toDatabase());
     }
 
+    private void validateProjections() {
+        if ((includes != null || excludes != null) && (slice != null || meta != null)) {
+            throw new ValidationException(Sofia.mixedModeProjections());
+        }
+        if (slice != null && meta != null) {
+            throw new ValidationException(Sofia.mixedModeProjections());
+        }
+        if (includes != null && excludes != null) {
+            if (excludes.size() > 1 || !"_id".equals(excludes.get(0))) {
+                throw new ValidationException(Sofia.mixedProjections());
+            }
+        }
+    }
+
     boolean isIncluding() {
         return includes != null && !includes.isEmpty();
-    }
-
-    /**
-     * Adds an sliced array field to a projection.
-     *
-     * @param field the field to project
-     * @param slice the options for projecting an array field
-     * @return this
-     * @mongodb.driver.manual /reference/operator/projection/slice/ $slice
-     * @see <a href="https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/">Project Fields to Return from Query</a>
-     */
-    public FindOptions project(String field, ArraySlice slice) {
-        this.arrayField = field;
-        this.slice = slice;
-        validateProjections();
-        return options;
-    }
-
-    /**
-     * Adds a metadata field to a projection.
-     *
-     * @param meta the metadata option for projecting
-     * @return this
-     * @mongodb.driver.manual reference/operator/projection/meta/ $meta
-     * @see <a href="https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/">Project Fields to Return from Query</a>
-     */
-    public FindOptions project(Meta meta) {
-        this.meta = meta;
-        validateProjections();
-        return options;
     }
 }

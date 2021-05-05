@@ -1,11 +1,11 @@
 package dev.morphia.test.aggregation;
 
 import com.mongodb.client.MongoCursor;
+import dev.morphia.MorphiaCursor;
 import dev.morphia.aggregation.experimental.Aggregation;
 import dev.morphia.aggregation.experimental.expressions.Expressions;
 import dev.morphia.aggregation.experimental.stages.Projection;
 import dev.morphia.aggregation.experimental.stages.Sort;
-import dev.morphia.query.MorphiaCursor;
 import dev.morphia.test.TestBase;
 import dev.morphia.test.models.City;
 import dev.morphia.test.models.Population;

@@ -10,8 +10,14 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.lang.Nullable;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
+import dev.morphia.aggregation.experimental.Aggregation;
+import dev.morphia.aggregation.experimental.AggregationOptions;
+import dev.morphia.aggregation.experimental.stages.Lookup;
+import dev.morphia.aggregation.experimental.stages.Sort;
+import dev.morphia.annotations.Reference;
 import dev.morphia.internal.MorphiaInternals.DriverVersion;
 import dev.morphia.mapping.Mapper;
+import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.mapping.codec.writer.DocumentWriter;
 import dev.morphia.query.experimental.filters.Filter;
 import dev.morphia.query.experimental.filters.Filters;
@@ -30,12 +36,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import static com.mongodb.CursorType.NonTailable;
 import static dev.morphia.aggregation.experimental.codecs.ExpressionHelper.document;
+import static dev.morphia.aggregation.experimental.stages.Projection.of;
 import static dev.morphia.internal.MorphiaInternals.tryInvoke;
+import static dev.morphia.query.Meta.META;
 import static dev.morphia.query.experimental.filters.Filters.text;
 import static java.lang.String.format;
 
@@ -197,7 +207,70 @@ class MorphiaQuery<T> implements Query<T> {
 
     @Override
     public MorphiaCursor<T> iterator(FindOptions options) {
-        return new MorphiaCursor<>(prepareCursor(options, getCollection()));
+        EntityModel entityModel = getEntityModel();
+        if (!options.isLogQuery() && entityModel != null && entityModel.hasReferences()) {
+            return aggregate(options);
+        } else {
+            return new MorphiaCursor<>(prepareCursor(options, getCollection()));
+        }
+    }
+
+    @NotNull
+    private MorphiaCursor<T> aggregate(FindOptions options) {
+        Aggregation<T> aggregation = datastore.aggregate(getEntityClass())
+                                              .match(filters.toArray(new Filter[0]));
+
+        Projection projection = options.projection();
+        List<String> includes = projection.includes();
+        if (includes != null) {
+            includes.forEach(include -> {
+                aggregation.project(of().include(include));
+            });
+        }
+        List<String> excludes = projection.excludes();
+        if (excludes != null) {
+            excludes.forEach(exclude -> {
+                aggregation.project(of().exclude(exclude));
+            });
+        }
+        if (options.getSort() != null) {
+            Document document = options.getSort();
+            Sort sort = Sort.on();
+            for (Entry<String, Object> entry : document.entrySet()) {
+                Object value = entry.getValue();
+                if (value.equals(1)) {
+                    sort.ascending(entry.getKey());
+                } else if (value.equals(-1)) {
+                    sort.descending(entry.getKey());
+                } else if (value instanceof Document && ((Document) value).keySet().equals(Set.of(META))) {
+                    sort.meta(entry.getKey());
+                } else {
+                    throw new UnsupportedOperationException("unmapped sort option: " + value);
+                }
+            }
+
+            aggregation.sort(sort);
+
+        }
+
+        getEntityModel().references().forEach(model -> {
+            Reference reference = model.getAnnotation(Reference.class);
+            if (reference != null) {
+                boolean lazy = reference.lazy();
+                //                if (!lazy) {
+                aggregation.lookup(Lookup.from(model.getNormalizedType())
+                                         .foreignField("_id")
+                                         .localField(model.getMappedName() + (reference.idOnly() ? "" : ".$id"))
+                                         .as(model.getMappedName()));
+                //                }
+            }
+        });
+        return aggregation.execute(getEntityClass(), new AggregationOptions(options));
+    }
+
+    @Nullable
+    private EntityModel getEntityModel() {
+        return mapper.isMappable(type) ? mapper.getEntityModel(type) : null;
     }
 
     @Override
@@ -303,10 +376,9 @@ class MorphiaQuery<T> implements Query<T> {
 
         MongoCollection<E> updated = findOptions.prepare(collection);
 
-        FindIterable<E> iterable = clientSession != null
-                                   ? updated.find(clientSession, query)
-                                   : updated.find(query);
-        return iterable;
+        return clientSession != null
+               ? updated.find(clientSession, query)
+               : updated.find(query);
     }
 
     @SuppressWarnings("ConstantConditions")

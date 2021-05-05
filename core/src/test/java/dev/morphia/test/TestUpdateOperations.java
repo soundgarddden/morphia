@@ -17,6 +17,7 @@ import com.mongodb.client.result.UpdateResult;
 import com.mongodb.lang.Nullable;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
+import dev.morphia.MorphiaCursor;
 import dev.morphia.UpdateOptions;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
@@ -25,7 +26,6 @@ import dev.morphia.annotations.PreLoad;
 import dev.morphia.internal.PathTarget;
 import dev.morphia.mapping.experimental.MorphiaReference;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
 import dev.morphia.query.Update;
@@ -45,6 +45,7 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.time.Instant;
@@ -388,34 +389,23 @@ public class TestUpdateOperations extends TestBase {
     }
 
     @Test
-    public void testInsertWithRef() {
-        final Pic pic = new Pic();
-        pic.setName("fist");
-        final ObjectId picKey = getDs().save(pic).getId();
+    public void testMultiUpdates() {
+        getMapper().map(ContainsPic.class);
+        Query<ContainsPic> finder = getDs().find(ContainsPic.class);
 
-        Query<ContainsPic> query = getDs().find(ContainsPic.class)
-                                          .filter(eq("name", "first"),
-                                              eq("pic", picKey));
-        assertInserted(query.update(set("name", "A"))
-                            .execute(new UpdateOptions().upsert(true)));
-        MatcherAssert.assertThat(getDs().find(ContainsPic.class).count(), is(1L));
-        getDs().find(ContainsPic.class).delete(new DeleteOptions().multi(true));
+        ContainsPic containsPic = createContainsPic(0);
+        containsPic.setPic(getDs().save(new Pic()));
+        getDs().save(containsPic);
+        createContainsPic(1);
+        createContainsPic(2);
 
-        query = getDs().find(ContainsPic.class)
-                       .filter(eq("name", "first"),
-                           eq("pic", pic));
-        assertInserted(query.update(set("name", "second"))
-                            .execute(new UpdateOptions().upsert(true)));
-        MatcherAssert.assertThat(getDs().find(ContainsPic.class).count(), is(1L));
+        finder.update(inc("size"))
+              .execute(new UpdateOptions().multi(true));
 
-        //test reading the object.
-        final ContainsPic cp = getDs().find(ContainsPic.class).iterator(new FindOptions().limit(1))
-                                      .next();
-        assertThat(cp, is(notNullValue()));
-        MatcherAssert.assertThat(cp.getName(), is("second"));
-        MatcherAssert.assertThat(cp.getPic(), is(notNullValue()));
-        MatcherAssert.assertThat(cp.getPic().getName(), is(notNullValue()));
-        MatcherAssert.assertThat(cp.getPic().getName(), is("fist"));
+        final MorphiaCursor<ContainsPic> iterator = finder.iterator(new FindOptions().sort(Sort.ascending("size")));
+        for (int i = 0; i < 3; i++) {
+            Assert.assertEquals(i + 1, iterator.next().getSize());
+        }
     }
 
     @Test
@@ -524,22 +514,37 @@ public class TestUpdateOperations extends TestBase {
         Assert.assertEquals(first.val, 16);
     }
 
+    //
     @Test
-    public void testMultiUpdates() {
-        getMapper().map(ContainsPic.class);
-        Query<ContainsPic> finder = getDs().find(ContainsPic.class);
+    @Ignore("https://github.com/MorphiaOrg/morphia/issues/1614")
+    public void testUpsertWithReference() {
+        final Pic pic = new Pic();
+        pic.setName("fist");
+        final ObjectId picKey = getDs().save(pic).getId();
 
-        createContainsPic(0);
-        createContainsPic(1);
-        createContainsPic(2);
+        Query<ContainsPic> query = getDs().find(ContainsPic.class)
+                                          .filter(eq("name", "first"),
+                                              eq("lazyPic", picKey));
+        assertInserted(query.update(set("name", "A"))
+                            .execute(new UpdateOptions().upsert(true)));
+        MatcherAssert.assertThat(getDs().find(ContainsPic.class).count(), is(1L));
+        getDs().find(ContainsPic.class).delete(new DeleteOptions().multi(true));
 
-        finder.update(inc("size"))
-              .execute(new UpdateOptions().multi(true));
+        query = getDs().find(ContainsPic.class)
+                       .filter(eq("name", "first"),
+                           eq("lazyPic", pic));
+        assertInserted(query.update(set("name", "second"))
+                            .execute(new UpdateOptions().upsert(true)));
+        MatcherAssert.assertThat(getDs().find(ContainsPic.class).count(), is(1L));
 
-        final MorphiaCursor<ContainsPic> iterator = finder.iterator(new FindOptions().sort(Sort.ascending("size")));
-        for (int i = 0; i < 3; i++) {
-            Assert.assertEquals(i + 1, iterator.next().getSize());
-        }
+        //test reading the object.
+        final ContainsPic cp = getDs().find(ContainsPic.class).iterator(new FindOptions().limit(1))
+                                      .next();
+        assertThat(cp, is(notNullValue()));
+        MatcherAssert.assertThat(cp.getName(), is("second"));
+        MatcherAssert.assertThat(cp.getPic(), is(notNullValue()));
+        MatcherAssert.assertThat(cp.getPic().getName(), is(notNullValue()));
+        MatcherAssert.assertThat(cp.getPic().getName(), is("fist"));
     }
 
     @Test
@@ -973,10 +978,10 @@ public class TestUpdateOperations extends TestBase {
         Assert.assertEquals(count, res.getModifiedCount());
     }
 
-    private void createContainsPic(int size) {
+    private ContainsPic createContainsPic(int size) {
         final ContainsPic containsPic = new ContainsPic();
         containsPic.setSize(size);
-        getDs().save(containsPic);
+        return getDs().save(containsPic);
     }
 
     private LogHolder createEntryLogs(String value) {

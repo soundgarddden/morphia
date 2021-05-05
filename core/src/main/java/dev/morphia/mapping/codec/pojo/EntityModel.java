@@ -10,11 +10,13 @@ import dev.morphia.annotations.PostLoad;
 import dev.morphia.annotations.PostPersist;
 import dev.morphia.annotations.PreLoad;
 import dev.morphia.annotations.PrePersist;
+import dev.morphia.annotations.Reference;
 import dev.morphia.mapping.InstanceCreatorFactory;
 import dev.morphia.mapping.InstanceCreatorFactoryImpl;
 import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.MappingException;
 import dev.morphia.mapping.codec.MorphiaInstanceCreator;
+import dev.morphia.mapping.experimental.MorphiaReference;
 import dev.morphia.sofia.Sofia;
 import org.bson.Document;
 
@@ -60,6 +62,7 @@ public class EntityModel {
     private final PropertyModel idProperty;
     private final PropertyModel versionProperty;
     private Map<Class<? extends Annotation>, List<ClassMethodPair>> lifecycleMethods;
+    private final List<PropertyModel> references = new ArrayList<>();
 
     /**
      * Creates a new instance
@@ -84,6 +87,9 @@ public class EntityModel {
             PropertyModel model = modelBuilder
                                       .owner(this)
                                       .build();
+            if (model.hasAnnotation(Reference.class) || model.getType().isAssignableFrom(MorphiaReference.class)) {
+                references.add(model);
+            }
             propertyModelsByMappedName.put(model.getMappedName(), model);
             for (String name : modelBuilder.alternateNames()) {
                 if (propertyModelsByMappedName.put(name, model) != null) {
@@ -301,6 +307,14 @@ public class EntityModel {
      */
     public boolean hasLifecycle(Class<? extends Annotation> type) {
         return getLifecycleMethods().containsKey(type);
+    }
+
+    public boolean hasReferences() {
+        return !references.isEmpty();
+    }
+
+    public List<PropertyModel> references() {
+        return references;
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.mongodb.client.model.CollationStrength;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Key;
+import dev.morphia.MorphiaCursor;
 import dev.morphia.TestBase;
 import dev.morphia.TestDatastore.FacebookUser;
 import dev.morphia.TestDatastore.Keys;

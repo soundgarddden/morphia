@@ -5,10 +5,10 @@ import com.mongodb.client.MongoCursor;
 /**
  * @param <T> the original type being iterated
  * @morphia.internal
- * @deprecated use {@link dev.morphia.query.MorphiaCursor} instead
+ * @deprecated use {@link dev.morphia.MorphiaCursor} instead
  */
 @Deprecated(forRemoval = true)
-public class MorphiaCursor<T> extends dev.morphia.query.MorphiaCursor<T> {
+public class MorphiaCursor<T> extends dev.morphia.MorphiaCursor<T> {
 
     /**
      * Creates a MorphiaCursor

@@ -9,6 +9,7 @@ import com.mongodb.client.model.CollationStrength;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.Key;
+import dev.morphia.MorphiaCursor;
 import dev.morphia.annotations.CappedAt;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
@@ -22,7 +23,6 @@ import dev.morphia.query.CountOptions;
 import dev.morphia.query.DefaultQueryFactory;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.LegacyQueryFactory;
-import dev.morphia.query.MorphiaCursor;
 import dev.morphia.query.Query;
 import dev.morphia.query.QueryFactory;
 import dev.morphia.query.ValidationException;
@@ -1109,10 +1109,12 @@ public class TestQuery extends TestBase {
 
         assertNotNull(photoKey, getDs().getLoggedQuery(options));
 
-        assertNotNull(getDs().find(HasPhotoReference.class)
-                             .filter(eq("photo", cpk.photo)).iterator(new FindOptions()
-                                                                          .limit(1))
-                             .tryNext());
+        HasPhotoReference loaded = getDs().find(HasPhotoReference.class)
+                                          .filter(eq("photo", cpk.photo))
+                                          .iterator(new FindOptions().limit(1))
+                                          .tryNext();
+        assertNotNull(loaded);
+        assertEquals(loaded, cpk);
         assertNull(getDs().find(HasPhotoReference.class)
                           .filter(eq("photo", 1)).iterator(new FindOptions()
                                                                .limit(1))
@@ -1371,7 +1373,7 @@ public class TestQuery extends TestBase {
         private Pic pic;
         @Reference(lazy = true)
         private Pic lazyPic;
-        @Reference(lazy = true)
+        @Reference
         private PicWithObjectId lazyObjectIdPic;
         @Indexed
         private int size;
@@ -1483,6 +1485,23 @@ public class TestQuery extends TestBase {
         private ObjectId id;
         @Reference
         private Photo photo;
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, photo);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof HasPhotoReference)) {
+                return false;
+            }
+            HasPhotoReference that = (HasPhotoReference) o;
+            return Objects.equals(id, that.id) && Objects.equals(photo, that.photo);
+        }
     }
 
     @Entity
@@ -1575,6 +1594,23 @@ public class TestQuery extends TestBase {
 
         Photo(List<String> keywords) {
             this.keywords = keywords;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, keywords);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Photo)) {
+                return false;
+            }
+            Photo photo = (Photo) o;
+            return Objects.equals(id, photo.id) && Objects.equals(keywords, photo.keywords);
         }
     }
 
