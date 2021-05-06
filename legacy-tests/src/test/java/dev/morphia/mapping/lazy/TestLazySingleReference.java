@@ -3,6 +3,7 @@ package dev.morphia.mapping.lazy;
 
 import dev.morphia.annotations.IdGetter;
 import dev.morphia.annotations.Reference;
+import dev.morphia.mapping.MapperOptions;
 import dev.morphia.testutil.TestEntity;
 import org.bson.types.ObjectId;
 import org.junit.Assert;
@@ -22,63 +23,71 @@ public class TestLazySingleReference extends ProxyTestBase {
     public final void testCallIdGetterWithoutFetching() {
         Assume.assumeTrue(proxyClassesPresent());
 
-        RootEntity root = new RootEntity();
-        final ReferencedEntity reference = new ReferencedEntity();
-        getDs().save(reference);
-        ObjectId id = reference.getId();
+        withOptions(MapperOptions.builder(mapperOptions)
+                                 .fetchReferencesViaAggregation(false)
+                                 .build(), () -> {
+            RootEntity root = new RootEntity();
+            final ReferencedEntity reference = new ReferencedEntity();
+            getDs().save(reference);
+            ObjectId id = reference.getId();
 
-        root.r = reference;
-        reference.setFoo("bar");
-        getDs().save(root);
+            root.r = reference;
+            reference.setFoo("bar");
+            getDs().save(root);
 
-        root = getDs().find(RootEntity.class)
-                      .filter(eq("_id", root.getId()))
-                      .first();
+            root = getDs().find(RootEntity.class)
+                          .filter(eq("_id", root.getId()))
+                          .first();
 
-        final ReferencedEntity p = root.r;
+            final ReferencedEntity p = root.r;
 
-        assertIsProxy(p);
-        assertNotFetched(p);
+            assertIsProxy(p);
+            assertNotFetched(p);
 
-        ObjectId idFromProxy = p.getId();
-        Assert.assertEquals(id, idFromProxy);
+            ObjectId idFromProxy = p.getId();
+            Assert.assertEquals(id, idFromProxy);
 
-        // Since getId() is annotated with @IdGetter, it should not cause the
-        // referenced entity to be fetched
-        assertNotFetched(p);
+            // Since getId() is annotated with @IdGetter, it should not cause the
+            // referenced entity to be fetched
+            assertNotFetched(p);
 
-        p.getFoo();
+            p.getFoo();
 
-        // Calling getFoo() should have caused the referenced entity to be fetched
-        assertFetched(p);
+            // Calling getFoo() should have caused the referenced entity to be fetched
+            assertFetched(p);
 
+        });
     }
 
     @Test
     public final void testGetKeyWithoutFetching() {
         Assume.assumeTrue(proxyClassesPresent());
 
-        RootEntity root = new RootEntity();
-        final ReferencedEntity reference = new ReferencedEntity();
+        withOptions(MapperOptions.builder(mapperOptions)
+                                 .fetchReferencesViaAggregation(false)
+                                 .build(), () -> {
+            RootEntity root = new RootEntity();
+            final ReferencedEntity reference = new ReferencedEntity();
 
-        root.r = reference;
-        reference.setFoo("bar");
+            root.r = reference;
+            reference.setFoo("bar");
 
-        final ObjectId id = getDs().save(reference).getId();
-        getDs().save(root);
+            final ObjectId id = getDs().save(reference).getId();
+            getDs().save(root);
 
-        RootEntity loaded = getDs().find(RootEntity.class)
-                                   .filter(eq("_id", root.getId()))
-                                   .first();
+            RootEntity loaded = getDs().find(RootEntity.class)
+                                       .filter(eq("_id", root.getId()))
+                                       .first();
 
-        final ReferencedEntity p = loaded.r;
+            final ReferencedEntity p = loaded.r;
 
-        assertIsProxy(p);
-        assertNotFetched(p);
-        p.getFoo();
-        // should be fetched now.
-        assertFetched(p);
+            assertIsProxy(p);
+            assertNotFetched(p);
+            p.getFoo();
+            // should be fetched now.
+            assertFetched(p);
 
+        });
     }
 
     @Test
@@ -106,39 +115,43 @@ public class TestLazySingleReference extends ProxyTestBase {
     public final void testShortcutInterface() {
         Assume.assumeTrue(proxyClassesPresent());
 
-        RootEntity root = new RootEntity();
-        final ReferencedEntity reference = new ReferencedEntity();
-        final ReferencedEntity second = new ReferencedEntity();
+        withOptions(MapperOptions.builder(mapperOptions)
+                                 .fetchReferencesViaAggregation(false)
+                                 .build(), () -> {
+            RootEntity root = new RootEntity();
+            final ReferencedEntity reference = new ReferencedEntity();
+            final ReferencedEntity second = new ReferencedEntity();
 
-        root.r = reference;
-        root.secondReference = second;
-        reference.setFoo("bar");
+            root.r = reference;
+            root.secondReference = second;
+            reference.setFoo("bar");
 
-        getDs().save(second);
-        getDs().save(reference);
-        getDs().save(root);
+            getDs().save(second);
+            getDs().save(reference);
+            getDs().save(root);
 
-        root = getDs().find(RootEntity.class)
-                      .filter(eq("_id", root.getId()))
-                      .first();
+            root = getDs().find(RootEntity.class)
+                          .filter(eq("_id", root.getId()))
+                          .first();
 
-        ReferencedEntity referenced = root.r;
+            ReferencedEntity referenced = root.r;
 
-        assertIsProxy(referenced);
-        assertNotFetched(referenced);
-        assertNotFetched(root.secondReference);
-        referenced.getFoo();
-        // should be fetched now.
-        assertFetched(referenced);
-        assertNotFetched(root.secondReference);
-        root.secondReference.getFoo();
-        assertFetched(root.secondReference);
+            assertIsProxy(referenced);
+            assertNotFetched(referenced);
+            assertNotFetched(root.secondReference);
+            referenced.getFoo();
+            // should be fetched now.
+            assertFetched(referenced);
+            assertNotFetched(root.secondReference);
+            root.secondReference.getFoo();
+            assertFetched(root.secondReference);
 
-        root = getDs().find(RootEntity.class)
-                      .filter(eq("_id", root.getId()))
-                      .first();
-        assertNotFetched(root.r);
-        assertNotFetched(root.secondReference);
+            root = getDs().find(RootEntity.class)
+                          .filter(eq("_id", root.getId()))
+                          .first();
+            assertNotFetched(root.r);
+            assertNotFetched(root.secondReference);
+        });
     }
 
     public static class RootEntity extends TestEntity {

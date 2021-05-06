@@ -208,7 +208,8 @@ class MorphiaQuery<T> implements Query<T> {
     @Override
     public MorphiaCursor<T> iterator(FindOptions options) {
         EntityModel entityModel = getEntityModel();
-        if (!options.isLogQuery() && entityModel != null && entityModel.hasReferences()) {
+        if (mapper.getOptions().isFetchReferencesViaAggregation()
+            && entityModel != null && entityModel.hasReferences()) {
             return aggregate(options);
         } else {
             return new MorphiaCursor<>(prepareCursor(options, getCollection()));
@@ -217,8 +218,10 @@ class MorphiaQuery<T> implements Query<T> {
 
     @NotNull
     private MorphiaCursor<T> aggregate(FindOptions options) {
-        Aggregation<T> aggregation = datastore.aggregate(getEntityClass())
-                                              .match(filters.toArray(new Filter[0]));
+        Aggregation<T> aggregation = datastore.aggregate(getEntityClass());
+        if (!filters.isEmpty()) {
+            aggregation.match(filters.toArray(new Filter[0]));
+        }
 
         Projection projection = options.projection();
         List<String> includes = projection.includes();
@@ -257,14 +260,15 @@ class MorphiaQuery<T> implements Query<T> {
             Reference reference = model.getAnnotation(Reference.class);
             if (reference != null) {
                 boolean lazy = reference.lazy();
-                //                if (!lazy) {
-                aggregation.lookup(Lookup.from(model.getNormalizedType())
-                                         .foreignField("_id")
-                                         .localField(model.getMappedName() + (reference.idOnly() ? "" : ".$id"))
-                                         .as(model.getMappedName()));
-                //                }
+                if (!lazy) {
+                    aggregation.lookup(Lookup.from(model.getNormalizedType())
+                                             .foreignField("_id")
+                                             .localField(model.getMappedName() + (reference.idOnly() ? "" : ".$id"))
+                                             .as(model.getMappedName()));
+                }
             }
         });
+        //        Document document = aggregation.execute(Document.class, new AggregationOptions(options)).tryNext();
         return aggregation.execute(getEntityClass(), new AggregationOptions(options));
     }
 

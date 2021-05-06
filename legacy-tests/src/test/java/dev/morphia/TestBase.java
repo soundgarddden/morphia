@@ -43,16 +43,13 @@ import static org.junit.Assume.assumeTrue;
 public abstract class TestBase {
     protected static final String TEST_DB_NAME = "morphia_test";
     private static final Logger LOG = LoggerFactory.getLogger(TestBase.class);
-    private static final MapperOptions mapperOptions = MapperOptions.DEFAULT;
+    protected static MapperOptions mapperOptions = MapperOptions.builder()
+                                                                .fetchReferencesViaAggregation(true)
+                                                                .build();
     private static MongoClient mongoClient;
 
-    private final MongoDatabase database;
-    private final Datastore ds;
-
-    protected TestBase() {
-        this.ds = Morphia.createDatastore(getMongoClient(), TEST_DB_NAME);
-        this.database = getMongoClient().getDatabase(TEST_DB_NAME);
-    }
+    private MongoDatabase database;
+    private Datastore ds;
 
     static void startMongo() {
         String mongodb = System.getenv("MONGODB");
@@ -84,10 +81,17 @@ public abstract class TestBase {
     }
 
     public MongoDatabase getDatabase() {
+        if (database == null) {
+            this.database = getMongoClient().getDatabase(TEST_DB_NAME);
+        }
+
         return database;
     }
 
     public Datastore getDs() {
+        if (ds == null) {
+            this.ds = Morphia.createDatastore(getMongoClient(), TEST_DB_NAME, mapperOptions);
+        }
         return ds;
     }
 
@@ -310,4 +314,20 @@ public abstract class TestBase {
                                 .get("options")
                : new Document();
     }
+
+    protected void withOptions(MapperOptions options, Runnable block) {
+        MapperOptions previousOptions = mapperOptions;
+        try {
+            mapperOptions = options;
+            database = null;
+            ds = null;
+
+            block.run();
+        } finally {
+            mapperOptions = previousOptions;
+            database = null;
+            ds = null;
+        }
+    }
+
 }

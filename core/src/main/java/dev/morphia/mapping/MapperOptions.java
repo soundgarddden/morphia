@@ -47,6 +47,7 @@ public class MapperOptions {
     private final UuidRepresentation uuidRepresentation;
     private final QueryFactory queryFactory;
     private final boolean enablePolymorphicQueries;
+    private final Boolean fetchReferencesViaAggregation;
     private ClassLoader classLoader;
 
     private MapperOptions(Builder builder) {
@@ -58,6 +59,7 @@ public class MapperOptions {
         discriminator = builder.discriminator();
         discriminatorKey = builder.discriminatorKey();
         enablePolymorphicQueries = builder.enablePolymorphicQueries();
+        fetchReferencesViaAggregation = builder.fetchReferencesViaAggregation();
         propertyDiscovery = builder.propertyDiscovery();
         propertyNaming = builder.propertyNaming();
         ignoreFinals = builder.ignoreFinals();
@@ -194,6 +196,18 @@ public class MapperOptions {
     }
 
     /**
+     * If this value is set to true, any queries involving types with references for fields will use an aggregation with $lookup to fetch
+     * the entity and all the referenced items in one query rather than requiring multiple roundtripst to the server to fetch them all.
+     *
+     * @return true if fetching references via aggregation is enabled
+     * @morphia.experimental
+     * @since 2.2
+     */
+    public boolean isFetchReferencesViaAggregation() {
+        return fetchReferencesViaAggregation;
+    }
+
+    /**
      * @return true if Morphia should ignore final fields
      */
     public boolean isIgnoreFinals() {
@@ -239,6 +253,7 @@ public class MapperOptions {
         private boolean cacheClassLookups;
         private boolean mapSubPackages;
         private boolean enablePolymorphicQueries;
+        private boolean fetchReferencesViaAggregation;
         private ClassLoader classLoader;
         private DateStorage dateStorage = DateStorage.UTC;
         private String discriminatorKey = "_t";
@@ -263,6 +278,7 @@ public class MapperOptions {
             storeNulls = original.isStoreNulls();
 
             enablePolymorphicQueries = original.enablePolymorphicQueries;
+            fetchReferencesViaAggregation = original.fetchReferencesViaAggregation;
             discriminatorKey = original.discriminatorKey;
             discriminator = original.discriminator;
             collectionNaming = original.collectionNaming;
@@ -397,6 +413,22 @@ public class MapperOptions {
         public Builder enablePolymorphicQueries(boolean enablePolymorphicQueries) {
             assertNotLocked();
             this.enablePolymorphicQueries = enablePolymorphicQueries;
+            return this;
+        }
+
+        /**
+         * If this value is set to true, any queries involving types with references for fields will use an aggregation with $lookup to
+         * fetch
+         * the entity and all the referenced items in one query rather than requiring multiple roundtripst to the server to fetch them all.
+         *
+         * @param fetch true to enable fetching references via $lookup
+         * @return true if fetching references via aggregation is enabled
+         * @aggregation.expression $lookup
+         * @morphia.experimental
+         * @since 2.2
+         */
+        public Builder fetchReferencesViaAggregation(boolean fetch) {
+            fetchReferencesViaAggregation = fetch;
             return this;
         }
 
@@ -552,6 +584,10 @@ public class MapperOptions {
 
         private boolean enablePolymorphicQueries() {
             return enablePolymorphicQueries;
+        }
+
+        private boolean fetchReferencesViaAggregation() {
+            return fetchReferencesViaAggregation;
         }
 
         private boolean ignoreFinals() {

@@ -359,14 +359,13 @@ public class ReferenceCodec extends BaseReferenceCodec<Object> implements Proper
                : new SetReference<>(new LinkedHashSet<>(mapped));
     }
 
-    @Nullable
     MorphiaReference<?> readSingle(Object value) {
         if (value instanceof Collection) {
             Iterator iterator = ((Collection) value).iterator();
             if (iterator.hasNext()) {
                 value = iterator.next();
             } else {
-                return null;
+                value = null;
             }
         }
         return new SingleReference<>(getDatastore(), getEntityModelForField(), value);
