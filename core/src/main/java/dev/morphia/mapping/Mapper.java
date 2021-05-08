@@ -57,13 +57,6 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 public class Mapper {
 
     /**
-     * Special name that can never be used. Used as default for some fields to indicate default state.
-     *
-     * @morphia.internal
-     */
-    public static final String IGNORED_FIELDNAME = ".";
-
-    /**
      * Set of classes that registered by this mapper
      */
     private final Map<Class, EntityModel> mappedEntities = new ConcurrentHashMap<>();

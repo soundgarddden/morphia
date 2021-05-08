@@ -30,6 +30,12 @@ import static java.lang.String.format;
  * @morphia.internal
  */
 public abstract class AnnotationBuilder<T extends Annotation> implements Annotation {
+    /**
+     * Special name that can never be used. Used as default for some fields to indicate default state.
+     *
+     * @morphia.internal
+     */
+    public static final String DEFAULT = ".";
     private final Map<String, Object> values = new HashMap<String, Object>();
 
     protected AnnotationBuilder() {
@@ -65,7 +71,7 @@ public abstract class AnnotationBuilder<T extends Annotation> implements Annotat
 
     @Override
     public String toString() {
-        return format("@%s %s", annotationType().getName(), values.toString());
+        return format("@%s %s", annotationType().getName(), values);
     }
 
     @Override

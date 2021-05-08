@@ -18,8 +18,6 @@
 
 package dev.morphia.annotations;
 
-import dev.morphia.mapping.Mapper;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -35,6 +33,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface Entity {
+    String NAME = ".";
+
     /**
      * @return The capped collection configuration options
      */
@@ -51,19 +51,19 @@ public @interface Entity {
     boolean useDiscriminator() default true;
 
     /**
-     * @return the collection name to for this entity.  Defaults to the class's simple name
-     * @see Class#getSimpleName()
+     * @return the discriminator value to use for this type.
      */
-    String value() default Mapper.IGNORED_FIELDNAME;
+    String discriminator() default AnnotationBuilder.DEFAULT;
 
     /**
      * @return the discriminator key to use for this type.
      */
-    String discriminatorKey() default Mapper.IGNORED_FIELDNAME;
+    String discriminatorKey() default AnnotationBuilder.DEFAULT;
 
     /**
-     * @return the discriminator value to use for this type.
+     * @return the collection name to for this entity.  Defaults to the class's simple name
+     * @see Class#getSimpleName()
      */
-    String discriminator() default Mapper.IGNORED_FIELDNAME;
+    String value() default AnnotationBuilder.DEFAULT;
 }
 

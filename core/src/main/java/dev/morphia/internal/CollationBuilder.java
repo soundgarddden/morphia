@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package dev.morphia.annotations;
+package dev.morphia.internal;
 
 import com.mongodb.client.model.CollationAlternate;
 import com.mongodb.client.model.CollationCaseFirst;
 import com.mongodb.client.model.CollationMaxVariable;
 import com.mongodb.client.model.CollationStrength;
+import dev.morphia.annotations.AnnotationBuilder;
+import dev.morphia.annotations.Collation;
 
 /**
  * @morphia.internal

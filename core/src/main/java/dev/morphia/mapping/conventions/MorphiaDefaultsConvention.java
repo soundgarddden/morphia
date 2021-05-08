@@ -1,9 +1,9 @@
 package dev.morphia.mapping.conventions;
 
 import dev.morphia.Datastore;
+import dev.morphia.annotations.AnnotationBuilder;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Entity;
-import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.MapperOptions;
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder;
 
@@ -24,7 +24,7 @@ public class MorphiaDefaultsConvention implements MorphiaConvention {
             modelBuilder.discriminatorKey(applyDefaults(entity.discriminatorKey(), options.getDiscriminatorKey()));
         } else {
             modelBuilder.enableDiscriminator(embedded == null || embedded.useDiscriminator());
-            modelBuilder.discriminatorKey(applyDefaults(embedded != null ? embedded.discriminatorKey() : Mapper.IGNORED_FIELDNAME,
+            modelBuilder.discriminatorKey(applyDefaults(embedded != null ? embedded.discriminatorKey() : AnnotationBuilder.DEFAULT,
                 options.getDiscriminatorKey()));
         }
 
@@ -32,7 +32,7 @@ public class MorphiaDefaultsConvention implements MorphiaConvention {
     }
 
     String applyDefaults(String configured, String defaultValue) {
-        if (!configured.equals(Mapper.IGNORED_FIELDNAME)) {
+        if (!configured.equals(AnnotationBuilder.DEFAULT)) {
             return configured;
         } else {
             return defaultValue;

@@ -2,8 +2,8 @@ package dev.morphia.mapping.codec.pojo;
 
 import com.mongodb.lang.Nullable;
 import dev.morphia.Datastore;
+import dev.morphia.annotations.AnnotationBuilder;
 import dev.morphia.annotations.Entity;
-import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.NotMappableException;
 import dev.morphia.mapping.conventions.MorphiaConvention;
 import dev.morphia.sofia.Sofia;
@@ -348,7 +348,7 @@ public class EntityModelBuilder {
 
     protected String getCollectionName() {
         Entity entityAn = getAnnotation(Entity.class);
-        return entityAn != null && !entityAn.value().equals(Mapper.IGNORED_FIELDNAME)
+        return entityAn != null && !entityAn.value().equals(AnnotationBuilder.DEFAULT)
                ? entityAn.value()
                : datastore.getMapper().getOptions().getCollectionNaming().apply(type.getSimpleName());
     }

@@ -1,5 +1,6 @@
 package dev.morphia.mapping;
 
+import dev.morphia.annotations.AnnotationBuilder;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Entity;
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder;
@@ -71,7 +72,7 @@ public abstract class DiscriminatorFunction {
      * @param builder the builder to evaluate
      */
     public final void apply(EntityModelBuilder builder) {
-        String discriminator = Mapper.IGNORED_FIELDNAME;
+        String discriminator = AnnotationBuilder.DEFAULT;
         Entity entity = builder.getAnnotation(Entity.class);
         if (entity != null) {
             discriminator = entity.discriminator();
@@ -81,7 +82,7 @@ public abstract class DiscriminatorFunction {
                 discriminator = embedded.discriminator();
             }
         }
-        if (discriminator.equals(Mapper.IGNORED_FIELDNAME)) {
+        if (discriminator.equals(AnnotationBuilder.DEFAULT)) {
             discriminator = compute(builder);
         }
 

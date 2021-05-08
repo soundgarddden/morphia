@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package dev.morphia.annotations;
+package dev.morphia.internal;
+
+import dev.morphia.annotations.AnnotationBuilder;
+import dev.morphia.annotations.Field;
+import dev.morphia.annotations.Index;
+import dev.morphia.annotations.IndexOptions;
 
 import java.util.List;
 

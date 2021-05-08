@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package dev.morphia.annotations;
+package dev.morphia.internal;
 
+import dev.morphia.annotations.AnnotationBuilder;
+import dev.morphia.annotations.IndexOptions;
+import dev.morphia.annotations.Indexed;
 import dev.morphia.utils.IndexDirection;
 
 class IndexedBuilder extends AnnotationBuilder<Indexed> implements Indexed {

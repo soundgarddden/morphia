@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-package dev.morphia.annotations;
+package dev.morphia.internal;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.lang.Nullable;
-import dev.morphia.internal.PathTarget;
+import dev.morphia.annotations.Collation;
+import dev.morphia.annotations.Field;
+import dev.morphia.annotations.Index;
+import dev.morphia.annotations.IndexOptions;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Indexes;
+import dev.morphia.annotations.Text;
 import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.MappingException;
 import dev.morphia.mapping.codec.pojo.EntityModel;

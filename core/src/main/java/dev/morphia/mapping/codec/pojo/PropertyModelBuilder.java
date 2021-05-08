@@ -18,11 +18,11 @@ package dev.morphia.mapping.codec.pojo;
 
 import com.mongodb.lang.Nullable;
 import dev.morphia.Datastore;
+import dev.morphia.annotations.AnnotationBuilder;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
 import dev.morphia.annotations.Version;
-import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.MapperOptions;
 import dev.morphia.mapping.codec.MorphiaPropertySerialization;
 import org.bson.codecs.pojo.PropertyAccessor;
@@ -67,11 +67,11 @@ public final class PropertyModelBuilder {
 
         if (hasAnnotation(Id.class)) {
             mappedName("_id");
-        } else if (property != null && !property.value().equals(Mapper.IGNORED_FIELDNAME)) {
+        } else if (property != null && !property.value().equals(AnnotationBuilder.DEFAULT)) {
             mappedName(property.value());
-        } else if (reference != null && !reference.value().equals(Mapper.IGNORED_FIELDNAME)) {
+        } else if (reference != null && !reference.value().equals(AnnotationBuilder.DEFAULT)) {
             mappedName(reference.value());
-        } else if (version != null && !version.value().equals(Mapper.IGNORED_FIELDNAME)) {
+        } else if (version != null && !version.value().equals(AnnotationBuilder.DEFAULT)) {
             mappedName(version.value());
         } else {
             mappedName(options.getFieldNaming().apply(name()));

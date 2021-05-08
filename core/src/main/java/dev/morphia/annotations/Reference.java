@@ -15,7 +15,6 @@
 package dev.morphia.annotations;
 
 
-import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.codec.references.ReferenceCodec;
 
 import java.lang.annotation.Documented;
@@ -55,5 +54,5 @@ public @interface Reference {
     /**
      * @return The name of the Mongo value to store the field. Defaults to the name of the field being annotated.
      */
-    String value() default Mapper.IGNORED_FIELDNAME;
+    String value() default AnnotationBuilder.DEFAULT;
 }

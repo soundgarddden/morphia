@@ -15,8 +15,6 @@
 package dev.morphia.annotations;
 
 
-import dev.morphia.mapping.Mapper;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -36,11 +34,9 @@ import java.lang.annotation.Target;
 @Deprecated(since = "2.2")
 public @interface Embedded {
     /**
-     * @return unused
-     * @deprecated
+     * @return the discriminator value to use for this type.
      */
-    @Deprecated(since = "2.0", forRemoval = true)
-    String value() default Mapper.IGNORED_FIELDNAME;
+    String discriminator() default AnnotationBuilder.DEFAULT;
 
     /**
      * @return true if the discriminator for this type should be stored
@@ -50,10 +46,12 @@ public @interface Embedded {
     /**
      * @return the discriminator key to use for this type.
      */
-    String discriminatorKey() default Mapper.IGNORED_FIELDNAME;
+    String discriminatorKey() default AnnotationBuilder.DEFAULT;
 
     /**
-     * @return the discriminator value to use for this type.
+     * @return unused
+     * @deprecated
      */
-    String discriminator() default Mapper.IGNORED_FIELDNAME;
+    @Deprecated(since = "2.0", forRemoval = true)
+    String value() default AnnotationBuilder.DEFAULT;
 }

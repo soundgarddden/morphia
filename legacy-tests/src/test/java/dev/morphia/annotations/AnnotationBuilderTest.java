@@ -1,5 +1,12 @@
 package dev.morphia.annotations;
 
+import dev.morphia.internal.CollationBuilder;
+import dev.morphia.internal.FieldBuilder;
+import dev.morphia.internal.IndexBuilder;
+import dev.morphia.internal.IndexOptionsBuilder;
+import dev.morphia.internal.IndexedBuilder;
+import dev.morphia.internal.TextBuilder;
+import dev.morphia.internal.ValidationBuilder;
 import org.junit.Test;
 
 import java.lang.annotation.Annotation;

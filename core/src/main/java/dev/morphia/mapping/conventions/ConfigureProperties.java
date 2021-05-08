@@ -2,12 +2,12 @@ package dev.morphia.mapping.conventions;
 
 import dev.morphia.Datastore;
 import dev.morphia.annotations.AlsoLoad;
+import dev.morphia.annotations.AnnotationBuilder;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Transient;
 import dev.morphia.annotations.Version;
 import dev.morphia.annotations.experimental.IdField;
-import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.MapperOptions;
 import dev.morphia.mapping.codec.MorphiaPropertySerialization;
 import dev.morphia.mapping.codec.pojo.EntityModelBuilder;
@@ -115,7 +115,7 @@ public class ConfigureProperties implements MorphiaConvention {
     }
 
     String applyDefaults(String configured, String defaultValue) {
-        if (!configured.equals(Mapper.IGNORED_FIELDNAME)) {
+        if (!configured.equals(AnnotationBuilder.DEFAULT)) {
             return configured;
         } else {
             return defaultValue;
