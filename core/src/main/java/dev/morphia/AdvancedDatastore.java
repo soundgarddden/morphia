@@ -2,7 +2,6 @@ package dev.morphia;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import dev.morphia.aggregation.AggregationPipeline;
 import dev.morphia.mapping.MappingException;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
@@ -21,17 +20,6 @@ import java.util.List;
 @SuppressWarnings("removal")
 @Deprecated(since = "2.0", forRemoval = true)
 public interface AdvancedDatastore extends Datastore {
-
-    /**
-     * Returns an {@link AggregationPipeline} bound to the given collection and class.
-     *
-     * @param collection the collection to query
-     * @param clazz      The class to create aggregation against
-     * @return the aggregation pipeline
-     * @deprecated
-     */
-    @Deprecated(since = "2.0", forRemoval = true)
-    AggregationPipeline createAggregation(String collection, Class<?> clazz);
 
     /**
      * @param <T>  The type of the entity

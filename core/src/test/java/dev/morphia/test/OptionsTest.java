@@ -3,6 +3,7 @@ package dev.morphia.test;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -28,8 +29,8 @@ import java.util.List;
 public class OptionsTest {
     @Test
     public void aggregationOptions() {
-        scan(com.mongodb.AggregationOptions.class, AggregationOptions.class, false, List.of(ReadConcern.class, ReadPreference.class,
-            WriteConcern.class));
+        scan(AggregateIterable.class, AggregationOptions.class, false, List.of(ReadConcern.class, ReadPreference.class,
+            WriteConcern.class), List.of("explain", "toCollection"));
     }
 
     @Test
@@ -87,7 +88,13 @@ public class OptionsTest {
 
     private void checkOverride(Class<?> driverType, Class<?> morphiaType, Method method) throws NoSuchMethodException {
         Class<?>[] parameterTypes = method.getParameterTypes();
-        Method morphiaMethod = morphiaType.getMethod(method.getName(), parameterTypes);
+        Method morphiaMethod;
+        try {
+            morphiaMethod = morphiaType.getMethod(method.getName(), parameterTypes);
+        } catch (NoSuchMethodException e) {
+            morphiaMethod = morphiaType.getDeclaredMethod(method.getName(), parameterTypes);
+        }
+
         Assert.assertTrue(!method.getReturnType().equals(driverType)
                           || morphiaMethod.getReturnType().equals(morphiaType), method.toString());
 
@@ -109,11 +116,16 @@ public class OptionsTest {
     }
 
     private void scan(Class<?> driverType, Class<?> morphiaType, boolean subclass, List<Class<?>> localFields) {
+        scan(driverType, morphiaType, subclass, localFields, List.of());
+    }
+
+    private void scan(Class<?> driverType, Class<?> morphiaType, boolean subclass, List<Class<?>> localFields, List<String> excludes) {
         try {
             Method[] methods = driverType.getDeclaredMethods();
             Assert.assertEquals(driverType.equals(morphiaType.getSuperclass()), subclass, "Options class should be a subclass");
             for (Method method : methods) {
-                if (method.getAnnotation(Deprecated.class) == null && !method.getName().equals("builder")) {
+                if (!excludes.contains(method.getName()) && method.getAnnotation(Deprecated.class) == null &&
+                    !method.getName().equals("builder")) {
                     checkOverride(driverType, morphiaType, method);
                 }
             }

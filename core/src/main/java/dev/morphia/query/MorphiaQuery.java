@@ -22,7 +22,6 @@ import dev.morphia.query.internal.MorphiaKeyCursor;
 import dev.morphia.sofia.Sofia;
 import org.bson.Document;
 import org.bson.codecs.EncoderContext;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -286,7 +285,6 @@ class MorphiaQuery<T> implements Query<T> {
         return collectionName;
     }
 
-    @NotNull
     private <E> FindIterable<E> iterable(FindOptions findOptions, MongoCollection<E> collection) {
         final Document query = toDocument();
 

@@ -112,11 +112,6 @@ public class DatastoreImpl implements AdvancedDatastore {
     }
 
     @Override
-    public dev.morphia.aggregation.AggregationPipeline createAggregation(Class source) {
-        return new dev.morphia.aggregation.AggregationPipelineImpl(this, mapper.getCollection(source), source);
-    }
-
-    @Override
     public <T> DeleteResult delete(T entity) {
         return delete(entity, new DeleteOptions().writeConcern(mapper.getWriteConcern(entity.getClass())));
     }
@@ -195,11 +190,6 @@ public class DatastoreImpl implements AdvancedDatastore {
                 indexHelper.createIndex(mapper.getCollection(model.getType()), model);
             }
         }
-    }
-
-    @Override
-    public dev.morphia.aggregation.AggregationPipeline createAggregation(String collection, Class<?> clazz) {
-        return new dev.morphia.aggregation.AggregationPipelineImpl(this, getDatabase().getCollection(collection), clazz);
     }
 
     @Override

@@ -12,6 +12,7 @@ import dev.morphia.internal.ReadConfigurable;
 import dev.morphia.internal.SessionConfigurable;
 import dev.morphia.internal.WriteConfigurable;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,12 +27,16 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     private Integer batchSize;
     private boolean bypassDocumentValidation;
     private Collation collation;
-    private Long maxTimeMS;
+    private long maxTime;
+    private TimeUnit maxTimeUnit;
     private ClientSession clientSession;
     private ReadPreference readPreference;
     private ReadConcern readConcern;
     private WriteConcern writeConcern;
     private Document hint;
+    private String comment;
+    private long maxAwaitTime;
+    private TimeUnit maxAwaitTimeUnit;
 
     /**
      * @return the configuration value
@@ -80,8 +85,11 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
         if (collation != null) {
             aggregate.collation(collation);
         }
-        if (maxTimeMS != null) {
-            aggregate.maxTime(getMaxTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+        if (maxAwaitTimeUnit != null) {
+            aggregate.maxAwaitTime(maxAwaitTime, maxAwaitTimeUnit);
+        }
+        if (maxTimeUnit != null) {
+            aggregate.maxTime(maxTime, maxTimeUnit);
         }
         if (hint != null) {
             aggregate.hint(hint);
@@ -161,6 +169,27 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     }
 
     /**
+     * @return the comment on the aggregation.  Might be null;
+     * @since 2.3
+     */
+    @Nullable
+    public String comment() {
+        return comment;
+    }
+
+    /**
+     * Sets the comment to the aggregation. A null value means no comment is set.
+     *
+     * @param comment the comment
+     * @return this
+     * @since 2.3
+     */
+    public AggregationOptions comment(@Nullable String comment) {
+        this.comment = comment;
+        return this;
+    }
+
+    /**
      * @return the configuration value
      */
     public boolean getAllowDiskUse() {
@@ -189,18 +218,10 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     }
 
     /**
-     * @param unit the target unit type
-     * @return the configuration value
-     */
-    public long getMaxTime(TimeUnit unit) {
-        return unit.convert(maxTimeMS, TimeUnit.MILLISECONDS);
-    }
-
-    /**
      * @return the configuration value
      */
     public long getMaxTimeMS() {
-        return maxTimeMS;
+        return TimeUnit.MILLISECONDS.convert(maxTime, maxTimeUnit);
     }
 
     /**
@@ -215,28 +236,6 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
      */
     public ReadPreference getReadPreference() {
         return readPreference;
-    }
-
-    /**
-     * @return the hint for which index to use. A null value means no hint is set.
-     * @mongodb.server.release 3.6
-     * @since 2.0
-     */
-    public Document hint() {
-        return hint;
-    }
-
-    /**
-     * Sets the hint for which index to use. A null value means no hint is set.
-     *
-     * @param hint the hint
-     * @return this
-     * @mongodb.server.release 3.6
-     * @since 3.6
-     */
-    public AggregationOptions hint(String hint) {
-        this.hint = new Document("hint", hint);
-        return this;
     }
 
     @Override
@@ -281,10 +280,80 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     }
 
     /**
-     * @return the configuration value
+     * @return the hint for which index to use. A null value means no hint is set.
+     * @mongodb.server.release 3.6
+     * @since 2.0
      */
+    public Document hint() {
+        return hint;
+    }
+
+    /**
+     * Sets the hint for which index to use. A null value means no hint is set.
+     *
+     * @param hint the hint
+     * @return this
+     * @mongodb.server.release 3.6
+     * @since 2.0
+     */
+    public AggregationOptions hint(String hint) {
+        this.hint = new Document("hint", hint);
+        return this;
+    }
+
+    /**
+     * The maximum amount of time to wait on new documents to satisfy a {@code $changeStream} aggregation.
+     *
+     * @param maxAwaitTime the max await time
+     * @param timeUnit     the time unit to return the result in
+     * @return this
+     * @since 2.3
+     */
+    public AggregationOptions maxAwaitTime(long maxAwaitTime, TimeUnit timeUnit) {
+        this.maxAwaitTime = maxAwaitTime;
+        this.maxAwaitTimeUnit = timeUnit;
+        return this;
+    }
+
+    /**
+     * @param unit the unit to represent the max await time in
+     * @return the max await time in the unit provided
+     * @since 2.3
+     */
+    public long maxAwaitTime(TimeUnit unit) {
+        return unit.convert(maxAwaitTime, maxAwaitTimeUnit);
+    }
+
+    /**
+     * Sets the maximum execution time for this operation.
+     *
+     * @param maxTime  the max time
+     * @param timeUnit the time unit
+     * @return this
+     * @since 2.3
+     */
+    public AggregationOptions maxTime(long maxTime, TimeUnit timeUnit) {
+        this.maxTime = maxTime;
+        this.maxTimeUnit = timeUnit;
+        return this;
+    }
+
+    /**
+     * @param unit the unit to represent the max time in
+     * @return the max time in the unit provided
+     * @since 2.3
+     */
+    public long maxTime(TimeUnit unit) {
+        return unit.convert(maxTime, maxTimeUnit);
+    }
+
+    /**
+     * @return the configuration value
+     * @deprecated use {@link #maxTime(TimeUnit)}
+     */
+    @Deprecated(forRemoval = true)
     public long maxTimeMS() {
-        return maxTimeMS;
+        return TimeUnit.MILLISECONDS.convert(maxTime, maxTimeUnit);
     }
 
     /**
@@ -293,10 +362,11 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
      *
      * @param maxTimeMS the max time in milliseconds
      * @return this
+     * @deprecated use {@link #maxTime(long, TimeUnit)}
      */
+    @Deprecated(forRemoval = true)
     public AggregationOptions maxTimeMS(long maxTimeMS) {
-        this.maxTimeMS = maxTimeMS;
-        return this;
+        return maxTime(maxTimeMS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -330,5 +400,17 @@ public class AggregationOptions implements SessionConfigurable<AggregationOption
     @Nullable
     public WriteConcern writeConcern() {
         return writeConcern;
+    }
+
+    AggregationOptions allowDiskUse(Boolean allowDiskUse) {
+        throw new UnsupportedOperationException();
+    }
+
+    AggregationOptions bypassDocumentValidation(Boolean bypassDocumentValidation) {
+        throw new UnsupportedOperationException();
+    }
+
+    AggregationOptions hint(Bson hint) {
+        throw new UnsupportedOperationException();
     }
 }

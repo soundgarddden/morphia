@@ -19,7 +19,6 @@ import dev.morphia.query.experimental.updates.UpdateOperator;
 import dev.morphia.query.internal.MorphiaCursor;
 import dev.morphia.query.internal.MorphiaKeyCursor;
 import org.bson.Document;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -432,7 +431,6 @@ public class LegacyQuery<T> implements CriteriaContainer, Query<T> {
         return obj;
     }
 
-    @NotNull
     private <E> FindIterable<E> iterable(FindOptions options, MongoCollection<E> collection) {
         final Document query = this.toDocument();
 
